@@ -162,7 +162,6 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
       });
       const data = await res.json();
-      console.log('History API response:', data);
       if (data.success) {
         if (page === 0) {
           setHistoryImages(data.data);
@@ -719,7 +718,7 @@ export default function Home() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {historyImages.map((item, index) => {
                 const imgUrl = item.url.startsWith('/') ? `${origin}${item.url}` : item.url;
-                const isImage = imgUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) || item.url.startsWith('/cfile/') || item.url.startsWith('/file/') || item.url.startsWith('/rfile/');
+                const isImage = imgUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) || item.url.startsWith('/cfile/') || item.url.startsWith('/file/') || item.url.startsWith('/rfile/') || item.url.startsWith('/ofile/');
                 return (
                   <div
                     key={index}
