@@ -28,8 +28,8 @@ export async function GET(request) {
   try {
     const offset = page * pageSize;
     const ps = env.IMG.prepare(
-      `SELECT url, referer, ip, rating, total, time FROM imginfo ORDER BY id DESC LIMIT ${pageSize} OFFSET ${offset}`
-    );
+      `SELECT url, referer, ip, rating, total, time FROM imginfo ORDER BY id DESC LIMIT ? OFFSET ?`
+    ).bind(pageSize, offset);
     const { results } = await ps.all();
     const total = await env.IMG.prepare(`SELECT COUNT(*) as total FROM imginfo`).first();
 
