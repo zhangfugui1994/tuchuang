@@ -162,6 +162,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
       });
       const data = await res.json();
+      console.log('History API response:', data);
       if (data.success) {
         if (page === 0) {
           setHistoryImages(data.data);
@@ -170,9 +171,16 @@ export default function Home() {
         }
         setHistoryTotal(data.total);
         setHistoryPage(page);
+      } else {
+        if (page === 0) {
+          setHistoryImages([]);
+        }
       }
     } catch (error) {
       console.error('加载历史记录出错:', error);
+      if (page === 0) {
+        setHistoryImages([]);
+      }
     } finally {
       setHistoryLoading(false);
     }
