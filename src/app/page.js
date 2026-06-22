@@ -719,7 +719,7 @@ export default function Home() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {historyImages.map((item, index) => {
                 const imgUrl = item.url.startsWith('/') ? `${origin}${item.url}` : item.url;
-                const isImage = imgUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i);
+                const isImage = imgUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) || item.url.startsWith('/cfile/') || item.url.startsWith('/file/') || item.url.startsWith('/rfile/');
                 return (
                   <div
                     key={index}
