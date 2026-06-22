@@ -35,6 +35,11 @@ export default function Home() {
   const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
   const [Loginuser, setLoginuser] = useState(''); // 初始选择第一个选项
   const [boxType, setBoxtype] = useState("img");
+  const [historyImages, setHistoryImages] = useState([]);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyPage, setHistoryPage] = useState(0);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const HISTORY_PAGE_SIZE = 20;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -55,8 +60,7 @@ export default function Home() {
     ip();
     getTotal();
     isAuth();
-
-
+    loadHistory();
   }, []);
   const ip = async () => {
     try {
@@ -150,6 +154,34 @@ export default function Home() {
 
 
 
+  const loadHistory = async (page = 0) => {
+    try {
+      setHistoryLoading(true);
+      const res = await fetch(`/api/history?page=${page}&pageSize=${HISTORY_PAGE_SIZE}`, {
+        method: "GET",
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (page === 0) {
+          setHistoryImages(data.data);
+        } else {
+          setHistoryImages((prev) => [...prev, ...data.data]);
+        }
+        setHistoryTotal(data.total);
+        setHistoryPage(page);
+      }
+    } catch (error) {
+      console.error('加载历史记录出错:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const handleLoadMoreHistory = () => {
+    loadHistory(historyPage + 1);
+  };
+
   const handleUpload = async (file = null) => {
     setUploading(true);
 
@@ -231,6 +263,7 @@ export default function Home() {
 
       setUploadedFilesNum(uploadedFilesNum + successCount);
       toast.success(`已成功上传 ${successCount} 张图片`);
+      loadHistory(0);
 
     } catch (error) {
       console.error('上传过程中出现错误:', error);
@@ -666,6 +699,66 @@ export default function Home() {
             </>
             )
           }
+        </div>
+
+        {/* 上传历史记录 */}
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-700">上传历史</h2>
+            <span className="text-sm text-gray-500">共 {Total} 张</span>
+          </div>
+          {historyImages.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {historyImages.map((item, index) => {
+                const imgUrl = item.url.startsWith('/') ? `${origin}${item.url}` : item.url;
+                const isImage = imgUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i);
+                return (
+                  <div
+                    key={index}
+                    className="group relative rounded-lg overflow-hidden shadow hover:shadow-lg transition cursor-pointer bg-gray-100"
+                    onClick={() => {
+                      navigator.clipboard.writeText(imgUrl);
+                      toast.success('链接已复制');
+                    }}
+                  >
+                    {isImage ? (
+                      <img
+                        src={imgUrl}
+                        alt="history"
+                        className="w-full h-32 object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const placeholder = e.target.parentElement?.querySelector('.img-placeholder');
+                          if (placeholder) placeholder.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className="img-placeholder hidden w-full h-32 flex items-center justify-center text-gray-400 text-xs">
+                      非图片
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs px-2 py-1 truncate">
+                      {item.url}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {historyTotal > 0 && historyImages.length === 0 && (
+            <p className="text-gray-400 text-center py-8">暂无上传记录</p>
+          )}
+          {historyTotal > historyImages.length && (
+            <div className="text-center mt-4">
+              <button
+                onClick={handleLoadMoreHistory}
+                disabled={historyLoading}
+                className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {historyLoading ? '加载中...' : '加载更多'}
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
