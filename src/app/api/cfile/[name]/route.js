@@ -98,13 +98,12 @@ export async function GET(request, { params }) {
     if (file_path === "error") {
       return Response.json({
         status: 500,
-        message: ` ${error.message}`,
+        message: `Failed to get file path from Telegram: ${name}`,
         success: false
-      }
-        , {
-          status: 500,
-          headers: corsHeaders,
-        })
+      }, {
+        status: 500,
+        headers: corsHeaders,
+      })
 
     } else {
       const res = await fetch(`https://api.telegram.org/file/bot${env.TG_BOT_TOKEN}/${file_path}`, {
