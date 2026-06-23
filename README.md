@@ -79,6 +79,8 @@
 |CUSTOM_DOMAIN | https://your-custom-domain.com (自定义加速域名) | string |
 |TG_BOT_TOKEN  | 123468:AAxxxGKrn5 (从 [@BotFather](https://t.me/BotFather)) |string |
 |TG_CHAT_ID   | -1234567 (频道的ID,TG Bot要是该频道或群组的管理员) |string |
+|GITHUB_TOKEN  | GitHub Personal Access Token（需具有 repo 权限，用于一键推送 script.js） | string |
+|GITHUB_REPO   | zhangfugui1994/zfg_boke (可选，默认仓库地址) | string |
 
 > TG_BOT_TOKEN
 
