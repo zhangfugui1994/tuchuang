@@ -39,7 +39,7 @@ export default function Home() {
   const [historyTotal, setHistoryTotal] = useState(0);
   const [historyPage, setHistoryPage] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const HISTORY_PAGE_SIZE = 20;
+  const [historyPageSize, setHistoryPageSize] = useState(20);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -157,7 +157,7 @@ export default function Home() {
   const loadHistory = async (page = 0) => {
     try {
       setHistoryLoading(true);
-      const res = await fetch(`/api/history?page=${page}&pageSize=${HISTORY_PAGE_SIZE}`, {
+      const res = await fetch(`/api/history?page=${page}&pageSize=${historyPageSize}`, {
         method: "GET",
         headers: { 'Content-Type': 'application/json' },
       });
@@ -187,6 +187,14 @@ export default function Home() {
 
   const handleLoadMoreHistory = () => {
     loadHistory(historyPage + 1);
+  };
+
+  const handlePageSizeChange = (size) => {
+    setHistoryPageSize(size);
+    setHistoryImages([]);
+    setHistoryTotal(0);
+    setHistoryPage(0);
+    loadHistory(0);
   };
 
   const handleUpload = async (file = null) => {
@@ -712,7 +720,28 @@ export default function Home() {
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-700">上传历史</h2>
-            <span className="text-sm text-gray-500">共 {Total} 张</span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500">共 {historyTotal} 张</span>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>每页:</span>
+                <select
+                  value={historyPageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className="border rounded px-2 py-1 bg-white"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={999999}>全部</option>
+                </select>
+              </div>
+              {historyTotal > 0 && historyImages.length > 0 && historyPageSize < historyTotal && (
+                <span className="text-sm text-gray-500">
+                  已加载 {historyImages.length} / {historyTotal}
+                </span>
+              )}
+            </div>
           </div>
           {historyImages.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -755,7 +784,7 @@ export default function Home() {
           {historyTotal > 0 && historyImages.length === 0 && (
             <p className="text-gray-400 text-center py-8">暂无上传记录</p>
           )}
-          {historyTotal > historyImages.length && (
+          {historyTotal > historyImages.length && historyPageSize < historyTotal && (
             <div className="text-center mt-4">
               <button
                 onClick={handleLoadMoreHistory}

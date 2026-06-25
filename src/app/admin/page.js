@@ -37,7 +37,7 @@ export default function Admin() {
         toast.error(res_data.message)
       } else {
         setListData(res_data.data)
-        const totalPages = Math.ceil(res_data.total / 10);
+        const totalPages = Math.ceil(res_data.total / 50);
         setSearchTotal(totalPages);
       }
 
