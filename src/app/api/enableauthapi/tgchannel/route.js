@@ -29,23 +29,30 @@ export async function POST(request) {
 	const Referer = request.headers.get('Referer') || "Referer";
 
 	const formData = await request.formData();
-	const fileType = formData.get('file').type;
+	const fileName = formData.get('file').name || '';
+	const fileExt = fileName.split('.').pop().toLowerCase();
 
 	const req_url = new URL(request.url);
 
-	const fileTypeMap = {
-		'image/': { url: 'sendPhoto', type: 'photo' },
-		'video/': { url: 'sendVideo', type: 'video' },
-		'audio/': { url: 'sendAudio', type: 'audio' },
-		'application/pdf': { url: 'sendDocument', type: 'document' }
-	};
-
-	let defaultType = { url: 'sendDocument', type: 'document' };
-
-	const { url: endpoint, type: fileTypevalue } = Object.keys(fileTypeMap)
-		.find(key => fileType.startsWith(key))
-		? fileTypeMap[Object.keys(fileTypeMap).find(key => fileType.startsWith(key))]
-		: defaultType;
+	// Determine Telegram API method by file extension (not FormData.type, which is unreliable in Edge Runtime)
+	// GIF and WebP files MUST use sendDocument to preserve original file (sendAnimation converts to TGIF format)
+	let endpoint, fileTypevalue;
+	if (['gif', 'webp'].includes(fileExt)) {
+		endpoint = 'sendDocument';
+		fileTypevalue = 'document';
+	} else if (['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv'].includes(fileExt)) {
+		endpoint = 'sendVideo';
+		fileTypevalue = 'video';
+	} else if (['jpg', 'jpeg', 'png', 'bmp', 'svg'].includes(fileExt)) {
+		endpoint = 'sendPhoto';
+		fileTypevalue = 'photo';
+	} else if (['mp3', 'wav', 'ogg', 'm4a'].includes(fileExt)) {
+		endpoint = 'sendAudio';
+		fileTypevalue = 'audio';
+	} else {
+		endpoint = 'sendDocument';
+		fileTypevalue = 'document';
+	}
 
 
 	const up_url = `https://api.telegram.org/bot${env.TG_BOT_TOKEN}/${endpoint}`;
@@ -177,6 +184,10 @@ const getFile = async (response) => {
 
 		if (response.result.video) {
 			return getFileDetails(response.result.video);
+		}
+
+		if (response.result.animation) {
+			return getFileDetails(response.result.animation);
 		}
 
 		if (response.result.document) {
