@@ -22,6 +22,8 @@ async function getContentTypeByMagicBytes(buffer) {
   if (view[0] === 0x52 && view[1] === 0x49 && view[2] === 0x46 && view[3] === 0x46) {
     if (view[8] === 0x57 && view[9] === 0x45 && view[10] === 0x42 && view[11] === 0x50) return 'image/webp';
   }
+  // WebM: EBML header (1A 45 DF A3)
+  if (view[0] === 0x1A && view[1] === 0x45 && view[2] === 0xDF && view[3] === 0xA3) return 'video/webm';
   return null;
 }
 
@@ -44,7 +46,8 @@ function getContentType(fileName) {
     'mov': 'video/quicktime',
     'wmv': 'video/x-ms-wmv',
     'flv': 'video/x-flv',
-    'mkv': 'video/x-matroska'
+    'mkv': 'video/x-matroska',
+    'webm': 'video/webm'
   };
   return mimeTypes[extension] || 'application/octet-stream';
 }
