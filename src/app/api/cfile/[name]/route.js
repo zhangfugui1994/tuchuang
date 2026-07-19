@@ -9,6 +9,22 @@ const corsHeaders = {
 };
 
 
+async function getContentTypeByMagicBytes(buffer) {
+  if (!buffer || buffer.byteLength < 4) return null;
+  const view = new Uint8Array(buffer.slice(0, 12));
+  // GIF: 47 49 46 38
+  if (view[0] === 0x47 && view[1] === 0x49 && view[2] === 0x46 && view[3] === 0x38) return 'image/gif';
+  // JPEG: FF D8 FF
+  if (view[0] === 0xFF && view[1] === 0xD8 && view[2] === 0xFF) return 'image/jpeg';
+  // PNG: 89 50 4E 47
+  if (view[0] === 0x89 && view[1] === 0x50 && view[2] === 0x4E && view[3] === 0x47) return 'image/png';
+  // WebP: RIFF....WEBP
+  if (view[0] === 0x52 && view[1] === 0x49 && view[2] === 0x46 && view[3] === 0x46) {
+    if (view[8] === 0x57 && view[9] === 0x45 && view[10] === 0x42 && view[11] === 0x50) return 'image/webp';
+  }
+  return null;
+}
+
 function getContentType(fileName) {
   const extension = fileName.split('.').pop().toLowerCase();
   const mimeTypes = {
@@ -117,7 +133,8 @@ export async function GET(request, { params }) {
 
 
 
-        const contentType = getContentType(fileName);
+        let contentType = await getContentTypeByMagicBytes(fileBuffer);
+        if (!contentType) contentType = getContentType(fileName);
         const responseHeaders = {
           "Content-Disposition": `inline; filename=${fileName}`,
           "Access-Control-Allow-Origin": "*",
