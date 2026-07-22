@@ -30,31 +30,26 @@ export async function POST(request) {
       });
     }
 
-    // 使用 58img 上传通道（无需任何配置）
-    const arrayBuffer = await file.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    // 转发到 TG_Channel 路由（用户已验证可用）
+    const fwdFormData = new FormData();
+    fwdFormData.append('file', file, file.name);
+    const reqUrl = new URL(request.url);
+    const tgUrl = reqUrl.origin + '/api/enableauthapi/tgchannel';
 
-    const payload = {
-      "Pic-Size": "0*0",
-      "Pic-Encoding": "base64",
-      "Pic-Path": "/nowater/webim/big/",
-      "Pic-Data": base64
-    };
-
-    const res = await fetch('https://upload.58cdn.com.cn/json/nowater/webim/big/', {
+    const fwdRes = await fetch(tgUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      body: fwdFormData
     });
 
-    const result = await res.text();
-    const random_number = Math.floor(Math.random() * 8) + 1;
-    const finalUrl = 'https://pic' + random_number + '.58cdn.com.cn/nowater/webim/big/' + result;
+    const result = await fwdRes.json();
 
     return Response.json({
-      url: finalUrl,
+      url: result.url,
       success: true,
-      name: result
+      name: result.name || ''
     }, {
       status: 200,
       headers: corsHeaders
