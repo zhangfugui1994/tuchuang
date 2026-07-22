@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 export async function POST(request) {
-  // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -31,38 +30,31 @@ export async function POST(request) {
       });
     }
 
-    // Upload to Telegraph
-    const tgFormData = new FormData();
-    tgFormData.append('file', file, file.name);
+    // 使用 58img 上传通道（无需任何配置）
+    const arrayBuffer = await file.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-    const tgRes = await fetch('https://telegra.ph/upload', {
+    const payload = {
+      "Pic-Size": "0*0",
+      "Pic-Encoding": "base64",
+      "Pic-Path": "/nowater/webim/big/",
+      "Pic-Data": base64
+    };
+
+    const res = await fetch('https://upload.58cdn.com.cn/json/nowater/webim/big/', {
       method: 'POST',
-      body: tgFormData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
 
-    if (!tgRes.ok) {
-      const errText = await tgRes.text();
-      return Response.json({ error: 'Telegraph upload failed', detail: errText, success: false }, {
-        status: 502,
-        headers: corsHeaders
-      });
-    }
-
-    const tgResult = await tgRes.json();
-    
-    if (!tgResult || !tgResult[0] || !tgResult[0].src) {
-      return Response.json({ error: 'Invalid response from Telegraph', success: false }, {
-        status: 502,
-        headers: corsHeaders
-      });
-    }
-
-    const imageUrl = 'https://telegra.ph' + tgResult[0].src;
+    const result = await res.text();
+    const random_number = Math.floor(Math.random() * 8) + 1;
+    const finalUrl = 'https://pic' + random_number + '.58cdn.com.cn/nowater/webim/big/' + result;
 
     return Response.json({
-      url: imageUrl,
-      src: tgResult[0].src,
-      success: true
+      url: finalUrl,
+      success: true,
+      name: result
     }, {
       status: 200,
       headers: corsHeaders
