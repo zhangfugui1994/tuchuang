@@ -20,19 +20,45 @@ export async function POST(request) {
   }
 
   try {
-    const formData = await request.formData();
-    const file = formData.get('file');
+    const contentType = request.headers.get('content-type') || '';
     
-    if (!file) {
-      return Response.json({ error: 'No file uploaded', success: false }, {
-        status: 400,
-        headers: corsHeaders
-      });
+    let file, fileName;
+    
+    // Support both multipart/form-data and base64 JSON
+    if (contentType.includes('application/json')) {
+      const body = await request.json();
+      if (!body.file || !body.filename) {
+        return Response.json({ error: 'Missing file data', success: false }, {
+          status: 400,
+          headers: corsHeaders
+        });
+      }
+      
+      // Decode base64 to blob
+      const byteCharacters = atob(body.file);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray]);
+      file = blob;
+      fileName = body.filename;
+    } else {
+      const formData = await request.formData();
+      file = formData.get('file');
+      if (!file) {
+        return Response.json({ error: 'No file uploaded', success: false }, {
+          status: 400,
+          headers: corsHeaders
+        });
+      }
+      fileName = file.name || 'upload';
     }
 
-    // 转发到 TG_Channel 路由（用户已验证可用）
+    // Forward to TG_Channel
     const fwdFormData = new FormData();
-    fwdFormData.append('file', file, file.name);
+    fwdFormData.append('file', file, fileName);
     const reqUrl = new URL(request.url);
     const tgUrl = reqUrl.origin + '/api/enableauthapi/tgchannel';
 
