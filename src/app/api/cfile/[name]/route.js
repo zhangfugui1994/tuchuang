@@ -141,7 +141,9 @@ export async function GET(request, { params }) {
         const responseHeaders = {
           "Content-Disposition": `inline; filename=${fileName}`,
           "Access-Control-Allow-Origin": "*",
-          "Content-Type": contentType
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=31536000, immutable",
+          "Vary": "Accept-Encoding"
         };
         const response_img = new Response(fileBuffer, {
           headers: responseHeaders
